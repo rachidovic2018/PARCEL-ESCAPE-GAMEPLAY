@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 using ParcelEscape.Core;
 
 namespace ParcelEscape.Gameplay
@@ -22,8 +23,8 @@ namespace ParcelEscape.Gameplay
         {
             var renderer = GetComponent<MeshRenderer>();
             if (renderer == null) return;
-            
-            renderer.material.color = color switch
+
+            SetUrpCompatibleColor(renderer, color switch
             {
                 PackageColor.Red => Color.red,
                 PackageColor.Blue => Color.blue,
@@ -32,7 +33,7 @@ namespace ParcelEscape.Gameplay
                 PackageColor.Purple => new Color(0.5f, 0f, 0.5f),
                 PackageColor.Orange => new Color(1f, 0.5f, 0f),
                 _ => Color.white
-            };
+            });
         }
 
         private void CreateDirectionArrow(PackageDirection direction)
@@ -73,8 +74,23 @@ namespace ParcelEscape.Gameplay
             var renderer = piece.GetComponent<MeshRenderer>();
             if (renderer != null)
             {
-                renderer.material.color = Color.white;
+                SetUrpCompatibleColor(renderer, Color.white);
             }
+        }
+
+        internal static void SetUrpCompatibleColor(Renderer renderer, Color color)
+        {
+            Material material = renderer.material;
+            if (GraphicsSettings.currentRenderPipeline != null)
+            {
+                Shader urpShader = Shader.Find("Universal Render Pipeline/Simple Lit");
+                if (urpShader != null && material.shader != urpShader)
+                {
+                    material.shader = urpShader;
+                }
+            }
+
+            material.color = color;
         }
 
         private static float DirectionRotation(PackageDirection direction)

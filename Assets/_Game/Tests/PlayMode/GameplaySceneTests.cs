@@ -4,6 +4,7 @@ using ParcelEscape.Gameplay;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -32,6 +33,17 @@ namespace ParcelEscape.Tests.PlayMode
             Assert.That(green.transform.position, Is.EqualTo(new Vector3(0f, 0.5f, 0f)));
             Assert.That(yellow.transform.position, Is.EqualTo(new Vector3(-1f, 0.5f, 1f)));
             Assert.That(blue.transform.Find("DirectionArrow/Shaft"), Is.Not.Null);
+
+            Assert.That(GraphicsSettings.currentRenderPipeline, Is.Not.Null,
+                "Gameplay must render through the configured URP asset.");
+            foreach (MeshRenderer renderer in Object.FindObjectsByType<MeshRenderer>(
+                         FindObjectsSortMode.None))
+            {
+                Assert.That(renderer.sharedMaterial, Is.Not.Null);
+                Assert.That(renderer.sharedMaterial.shader.name,
+                    Does.StartWith("Universal Render Pipeline/"),
+                    $"{renderer.name} must use a URP-compatible material.");
+            }
 
             blue.OnTapped?.Invoke(blue.PackageId);
             blue.OnTapped?.Invoke(blue.PackageId);

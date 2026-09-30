@@ -10,7 +10,7 @@ namespace ParcelEscape.Gameplay
             var renderer = GetComponent<MeshRenderer>();
             if (renderer != null)
             {
-                renderer.material.color = new Color(0.3f, 0.3f, 0.3f); // Dark gray
+                PackageView.SetUrpCompatibleColor(renderer, new Color(0.3f, 0.3f, 0.3f));
             }
         }
     }
