@@ -74,10 +74,10 @@ namespace ParcelEscape.Gameplay
 
         private void HandlePackageTapped(int packageId)
         {
-            if (_session == null || _session.State != InteractionState.Ready) return;
-
-            _session.State = InteractionState.ResolvingMove;
-            var result = _session.TryMovePackage(packageId);
+            if (_session == null || !_session.TryMovePackage(packageId, out var result))
+            {
+                return;
+            }
 
             if (_packageViews.TryGetValue(packageId, out var view))
             {
@@ -90,9 +90,9 @@ namespace ParcelEscape.Gameplay
                     StartCoroutine(ResolveBlockedRoutine(view));
                 }
             }
-            else
+            else if (result.Status == MoveExecutionStatus.Success)
             {
-                _session.State = InteractionState.Ready;
+                _session.CompleteMovePresentation();
             }
         }
 
@@ -102,14 +102,13 @@ namespace ParcelEscape.Gameplay
             _spawnedObjects.Remove(view.gameObject);
             
             yield return StartCoroutine(view.PlayEscapeAnimation(direction));
-            
-            _session.State = InteractionState.Ready;
+
+            _session.CompleteMovePresentation();
         }
 
         private IEnumerator ResolveBlockedRoutine(PackageView view)
         {
             yield return StartCoroutine(view.PlayBlockedFeedback());
-            _session.State = InteractionState.Ready;
         }
 
         private Vector3 GridToWorld(GridPosition gridPos, int boardWidth, int boardHeight)

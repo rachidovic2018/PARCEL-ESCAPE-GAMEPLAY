@@ -29,10 +29,8 @@ namespace ParcelEscape.Gameplay
                 cameraSetup.SetupForBoard(levelDefinition.width, levelDefinition.height, 1.0f);
             }
 
-            _gameSession = new GameSession(levelDefinition);
-            
             BoardState initialBoard = LevelDefinitionConverter.Convert(levelDefinition);
-            _gameSession.LoadLevel(initialBoard);
+            _gameSession = new GameSession(initialBoard);
 
             boardPresenter.Initialize(_gameSession);
             boardPresenter.SpawnBoard(initialBoard);
