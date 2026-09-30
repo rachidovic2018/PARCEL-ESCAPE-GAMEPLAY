@@ -9,9 +9,11 @@ namespace ParcelEscape.Gameplay
         {
             Camera cam = GetComponent<Camera>();
             cam.orthographic = true;
-            
-            float maxDimension = Mathf.Max(width, height) * cellSize;
-            cam.orthographicSize = (maxDimension / 2f) + 2f; // padding + space
+
+            float halfBoardWidth = (width * cellSize * 0.5f) + 0.4f;
+            float halfBoardDepth = (height * cellSize * 0.5f) + 0.8f;
+            float aspect = Mathf.Max(cam.aspect, 0.01f);
+            cam.orthographicSize = Mathf.Max(halfBoardDepth, halfBoardWidth / aspect);
             
             // 55 degree isometric style looking down
             float heightOffset = 10f;

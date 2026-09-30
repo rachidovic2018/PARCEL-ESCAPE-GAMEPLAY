@@ -37,31 +37,56 @@ namespace ParcelEscape.Gameplay
 
         private void CreateDirectionArrow(PackageDirection direction)
         {
-            GameObject arrow = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            arrow.transform.SetParent(this.transform);
-            
-            // Destroy default collider on the arrow so it doesn't interfere
-            Destroy(arrow.GetComponent<Collider>());
-            
-            // Simple arrow visual scaling and placement
-            arrow.transform.localScale = new Vector3(0.2f, 0.2f, 0.5f);
-            
-            Vector3 offset = Vector3.zero;
-            switch (direction)
+            var arrowRoot = new GameObject("DirectionArrow");
+            arrowRoot.transform.SetParent(transform, false);
+            arrowRoot.transform.localPosition = new Vector3(0f, 0.56f, 0f);
+            arrowRoot.transform.localRotation = Quaternion.Euler(0f, DirectionRotation(direction), 0f);
+
+            CreateArrowPiece(arrowRoot.transform, "Shaft", new Vector3(0f, 0f, -0.04f),
+                new Vector3(0.14f, 0.10f, 0.50f), 0f);
+            CreateArrowPiece(arrowRoot.transform, "HeadLeft", new Vector3(-0.13f, 0f, 0.25f),
+                new Vector3(0.14f, 0.10f, 0.34f), -45f);
+            CreateArrowPiece(arrowRoot.transform, "HeadRight", new Vector3(0.13f, 0f, 0.25f),
+                new Vector3(0.14f, 0.10f, 0.34f), 45f);
+        }
+
+        private static void CreateArrowPiece(
+            Transform parent,
+            string pieceName,
+            Vector3 localPosition,
+            Vector3 localScale,
+            float yRotation)
+        {
+            GameObject piece = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            piece.name = pieceName;
+            piece.transform.SetParent(parent, false);
+            piece.transform.localPosition = localPosition;
+            piece.transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
+            piece.transform.localScale = localScale;
+
+            var collider = piece.GetComponent<Collider>();
+            if (collider != null)
             {
-                case PackageDirection.Up: offset = new Vector3(0, 0, 0.25f); break;
-                case PackageDirection.Down: offset = new Vector3(0, 0, -0.25f); break;
-                case PackageDirection.Left: offset = new Vector3(-0.25f, 0, 0); break;
-                case PackageDirection.Right: offset = new Vector3(0.25f, 0, 0); break;
+                Destroy(collider);
             }
-            
-            arrow.transform.localPosition = offset + new Vector3(0, 0.5f, 0);
-            
-            var renderer = arrow.GetComponent<MeshRenderer>();
+
+            var renderer = piece.GetComponent<MeshRenderer>();
             if (renderer != null)
             {
                 renderer.material.color = Color.white;
             }
+        }
+
+        private static float DirectionRotation(PackageDirection direction)
+        {
+            return direction switch
+            {
+                PackageDirection.Up => 0f,
+                PackageDirection.Right => 90f,
+                PackageDirection.Down => 180f,
+                PackageDirection.Left => -90f,
+                _ => 0f
+            };
         }
 
         private void OnMouseDown()

@@ -11,6 +11,16 @@ namespace ParcelEscape.Gameplay
 
         private GameSession _gameSession;
 
+        public void Configure(
+            LevelDefinitionAsset definition,
+            BoardPresenter presenter,
+            CameraSetup setup)
+        {
+            levelDefinition = definition;
+            boardPresenter = presenter;
+            cameraSetup = setup;
+        }
+
         private void Start()
         {
             if (levelDefinition == null)

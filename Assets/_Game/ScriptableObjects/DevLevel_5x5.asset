@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df01c2774341244aeaf11c193caa2234, type: 3}
+  m_Name: DevLevel_5x5
+  m_EditorClassIdentifier: ParcelEscape.Gameplay::ParcelEscape.Gameplay.LevelDefinitionAsset
+  width: 5
+  height: 5
+  packageDefinitions:
+  - id: 1
+    x: 2
+    y: 3
+    direction: 0
+    color: 1
+  - id: 2
+    x: 0
+    y: 2
+    direction: 3
+    color: 0
+  - id: 3
+    x: 2
+    y: 2
+    direction: 2
+    color: 2
+  - id: 4
+    x: 1
+    y: 3
+    direction: 1
+    color: 3
+  blockerDefinitions:
+  - id: 5
+    x: 1
+    y: 1
