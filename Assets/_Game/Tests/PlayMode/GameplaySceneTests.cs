@@ -2,6 +2,8 @@ using System.Collections;
 using NUnit.Framework;
 using ParcelEscape.Gameplay;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -51,6 +53,117 @@ namespace ParcelEscape.Tests.PlayMode
             Assert.That(GameObject.Find("Package_4"), Is.Not.Null,
                 "The package blocked by the fixed blocker must remain after repeated requests.");
             Assert.That(GameObject.Find("Blocker_5"), Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator MousePress_SelectsValidPackage_AndRapidRepeatDoesNotDuplicateMove()
+        {
+            yield return LoadGameplayScene();
+
+            PackageView blue = FindPackage(1);
+            Camera camera = Camera.main;
+            Assert.That(camera, Is.Not.Null);
+            Assert.That(Object.FindFirstObjectByType<PackageInputController>(), Is.Not.Null);
+
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            try
+            {
+                Vector2 screenPosition = camera.WorldToScreenPoint(blue.transform.position);
+
+                InputSystem.QueueStateEvent(mouse, new MouseState
+                {
+                    position = screenPosition,
+                    buttons = 1
+                });
+                yield return null;
+
+                InputSystem.QueueStateEvent(mouse, new MouseState
+                {
+                    position = screenPosition,
+                    buttons = 0
+                });
+                yield return null;
+
+                InputSystem.QueueStateEvent(mouse, new MouseState
+                {
+                    position = screenPosition,
+                    buttons = 1
+                });
+                yield return null;
+
+                yield return new WaitForSeconds(0.7f);
+
+                Assert.That(GameObject.Find("Package_1"), Is.Null,
+                    "A rapid repeated mouse press must not execute the valid move twice.");
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(mouse);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TouchPress_SelectsPackages_AndRepeatedBlockedPressesRemainSafe()
+        {
+            yield return LoadGameplayScene();
+
+            PackageView blue = FindPackage(1);
+            PackageView yellow = FindPackage(4);
+            Camera camera = Camera.main;
+            Assert.That(camera, Is.Not.Null);
+
+            Touchscreen touchscreen = InputSystem.AddDevice<Touchscreen>();
+            try
+            {
+                yield return TouchPackage(touchscreen, camera, blue, 1);
+                yield return new WaitForSeconds(0.7f);
+
+                Assert.That(GameObject.Find("Package_1"), Is.Null,
+                    "A touch press must select and resolve the valid package.");
+
+                yield return TouchPackage(touchscreen, camera, yellow, 2);
+                yield return TouchPackage(touchscreen, camera, yellow, 3);
+                yield return new WaitForSeconds(0.5f);
+
+                Assert.That(GameObject.Find("Package_4"), Is.Not.Null,
+                    "Repeated touch presses must not remove a blocked package.");
+                Assert.That(GameObject.Find("Blocker_5"), Is.Not.Null);
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(touchscreen);
+            }
+        }
+
+        private static IEnumerator LoadGameplayScene()
+        {
+            yield return SceneManager.LoadSceneAsync("Gameplay");
+            yield return null;
+        }
+
+        private static IEnumerator TouchPackage(
+            Touchscreen touchscreen,
+            Camera camera,
+            PackageView packageView,
+            int touchId)
+        {
+            Vector2 screenPosition = camera.WorldToScreenPoint(packageView.transform.position);
+
+            InputSystem.QueueStateEvent(touchscreen, new TouchState
+            {
+                touchId = touchId,
+                phase = UnityEngine.InputSystem.TouchPhase.Began,
+                position = screenPosition
+            });
+            yield return null;
+
+            InputSystem.QueueStateEvent(touchscreen, new TouchState
+            {
+                touchId = touchId,
+                phase = UnityEngine.InputSystem.TouchPhase.Ended,
+                position = screenPosition
+            });
+            yield return null;
         }
 
         private static PackageView FindPackage(int packageId)

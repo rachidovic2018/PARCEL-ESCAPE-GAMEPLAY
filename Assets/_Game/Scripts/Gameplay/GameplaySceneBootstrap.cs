@@ -8,6 +8,7 @@ namespace ParcelEscape.Gameplay
         [SerializeField] private LevelDefinitionAsset levelDefinition;
         [SerializeField] private BoardPresenter boardPresenter;
         [SerializeField] private CameraSetup cameraSetup;
+        [SerializeField] private PackageInputController packageInputController;
 
         private GameSession _gameSession;
 
@@ -38,6 +39,20 @@ namespace ParcelEscape.Gameplay
             {
                 cameraSetup.SetupForBoard(levelDefinition.width, levelDefinition.height, 1.0f);
             }
+
+            if (packageInputController == null)
+            {
+                packageInputController = GetComponent<PackageInputController>();
+                if (packageInputController == null)
+                {
+                    packageInputController = gameObject.AddComponent<PackageInputController>();
+                }
+            }
+
+            Camera inputCamera = cameraSetup != null
+                ? cameraSetup.GetComponent<Camera>()
+                : Camera.main;
+            packageInputController.Initialize(inputCamera);
 
             BoardState initialBoard = LevelDefinitionConverter.Convert(levelDefinition);
             _gameSession = new GameSession(initialBoard);

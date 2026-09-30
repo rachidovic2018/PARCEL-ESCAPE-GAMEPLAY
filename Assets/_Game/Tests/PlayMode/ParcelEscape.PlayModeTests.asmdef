@@ -2,7 +2,8 @@
     "name": "ParcelEscape.PlayModeTests",
     "rootNamespace": "ParcelEscape.Tests.PlayMode",
     "references": [
-        "ParcelEscape.Gameplay"
+        "ParcelEscape.Gameplay",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

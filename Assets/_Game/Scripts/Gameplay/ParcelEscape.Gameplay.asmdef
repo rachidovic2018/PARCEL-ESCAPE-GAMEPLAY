@@ -2,7 +2,8 @@
     "name": "ParcelEscape.Gameplay",
     "rootNamespace": "ParcelEscape.Gameplay",
     "references": [
-        "ParcelEscape.Core"
+        "ParcelEscape.Core",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

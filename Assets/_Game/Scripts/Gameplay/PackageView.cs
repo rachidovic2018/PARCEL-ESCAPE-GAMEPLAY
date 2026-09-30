@@ -89,7 +89,7 @@ namespace ParcelEscape.Gameplay
             };
         }
 
-        private void OnMouseDown()
+        internal void ForwardTap()
         {
             OnTapped?.Invoke(PackageId);
         }
