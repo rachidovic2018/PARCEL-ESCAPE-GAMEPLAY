@@ -2,11 +2,11 @@
 Parcel Escape: Sort & Deliver
 
 # Current Phase
-Phase 0 + Phase 1
+Phase 2 — Full Puzzle Loop (started)
 
 # Baseline
 - Branch: `main`
-- Current checkpoint: `fb60caefcc390a2ba6c1dca7ac9f3245fd7d6a1f` (`Add touch-first package input`)
+- Current checkpoint: `00db820a1b00620abaca9b01a3632ce5bb1fbdd3` (`Complete Phase 1 URP and Android configuration`)
 - Unity: `6000.3.24f1`
 - Universal Render Pipeline: resolved `17.3.0`
 - Input System: `1.11.2`
@@ -29,9 +29,11 @@ Phase 0 + Phase 1
 - `DevLevel_5x5` is deterministic and demonstrates a valid escape, package-to-package blocking, and fixed-blocker blocking.
 - Touch-first Input System picking is active with an Editor mouse fallback.
 - Valid moves resolve once; blocked and duplicate requests do not corrupt logical state.
+- Phase 2 Core foundation models immutable active/next trucks, bounded FIFO holding, deterministic escaped-package routing, and active-truck completion.
+- Holding-to-truck auto-loading and truck promotion are not implemented yet.
 
 # Tests
-- Edit Mode: 49 passed, 0 failed.
+- Edit Mode: 57 passed, 0 failed (including 8 deterministic delivery-routing tests).
 - Play Mode: 3 passed, 0 failed.
 - Play Mode covers scene rendering, URP-compatible materials, valid/blocked moves, duplicate protection, virtual mouse input, and virtual touch input.
 - Physical Android-device input has not been verified.
@@ -52,11 +54,12 @@ Phase 0 + Phase 1
 - Android build and physical-device verification remain blocked until the matching Unity Android modules are installed.
 
 # Deferred Systems
-- Trucks and holding queue
+- Truck and holding presentation
+- Holding-to-truck auto-loading and truck promotion
 - Victory/failure flow
 - Solver and level generator
 - Economy, ads, IAP, and analytics
 - Final visual art
 
 # Next Phase
-Phase 2 — Full Puzzle Loop
+Continue Phase 2 — integrate delivery orchestration, then implement explicit truck promotion and holding auto-loading.
