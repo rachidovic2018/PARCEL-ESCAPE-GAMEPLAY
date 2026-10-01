@@ -13,7 +13,8 @@ namespace ParcelEscape.Core
     public sealed class TruckPromotionResult
     {
         public TruckPromotionStatus Status { get; }
-        public TruckState CompletedTruck { get; }
+        public IReadOnlyList<TruckState> CompletedTrucks { get; }
+        public TruckState CompletedTruck => CompletedTrucks.Count == 0 ? null : CompletedTrucks[0];
         public IReadOnlyList<PackageState> AutoLoadedPackages { get; }
         public DeliveryState ResultingState { get; }
         public bool WasPromoted =>
@@ -25,12 +26,12 @@ namespace ParcelEscape.Core
 
         internal TruckPromotionResult(
             TruckPromotionStatus status,
-            TruckState completedTruck,
+            IReadOnlyList<TruckState> completedTrucks,
             IReadOnlyList<PackageState> autoLoadedPackages,
             DeliveryState resultingState)
         {
             Status = status;
-            CompletedTruck = completedTruck;
+            CompletedTrucks = new List<TruckState>(completedTrucks).AsReadOnly();
             AutoLoadedPackages = new List<PackageState>(autoLoadedPackages).AsReadOnly();
             ResultingState = resultingState;
         }

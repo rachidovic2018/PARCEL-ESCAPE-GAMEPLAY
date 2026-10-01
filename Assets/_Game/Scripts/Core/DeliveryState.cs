@@ -7,6 +7,7 @@ namespace ParcelEscape.Core
     {
         public TruckState ActiveTruck { get; }
         public TruckState NextTruck { get; }
+        public TruckSequenceState RemainingTruckSequence { get; }
         public HoldingQueueState HoldingQueue { get; }
         public bool HasNextTruck => NextTruck != null;
 
@@ -14,9 +15,20 @@ namespace ParcelEscape.Core
             TruckState activeTruck,
             TruckState nextTruck,
             HoldingQueueState holdingQueue)
+            : this(activeTruck, nextTruck, new TruckSequenceState(), holdingQueue)
+        {
+        }
+
+        public DeliveryState(
+            TruckState activeTruck,
+            TruckState nextTruck,
+            TruckSequenceState remainingTruckSequence,
+            HoldingQueueState holdingQueue)
         {
             ActiveTruck = activeTruck ?? throw new ArgumentNullException(nameof(activeTruck));
             NextTruck = nextTruck;
+            RemainingTruckSequence = remainingTruckSequence ??
+                throw new ArgumentNullException(nameof(remainingTruckSequence));
             HoldingQueue = holdingQueue ?? throw new ArgumentNullException(nameof(holdingQueue));
 
             if (nextTruck != null && nextTruck.LoadCount != 0)
@@ -24,7 +36,39 @@ namespace ParcelEscape.Core
                 throw new ArgumentException("The next truck cannot receive packages before promotion.", nameof(nextTruck));
             }
 
+            if (nextTruck == null && !remainingTruckSequence.IsEmpty)
+            {
+                throw new ArgumentException(
+                    "A remaining truck sequence requires an explicit next truck.",
+                    nameof(remainingTruckSequence));
+            }
+
             ValidateUniquePackageIds(activeTruck.LoadedPackages, holdingQueue.Packages);
+        }
+
+        public static DeliveryState CreateInitial(
+            TruckSequenceState truckSequence,
+            HoldingQueueState holdingQueue)
+        {
+            if (truckSequence == null)
+            {
+                throw new ArgumentNullException(nameof(truckSequence));
+            }
+
+            if (holdingQueue == null)
+            {
+                throw new ArgumentNullException(nameof(holdingQueue));
+            }
+
+            if (!truckSequence.TryDequeue(out var activeTruck, out var afterActive) ||
+                !afterActive.TryDequeue(out var nextTruck, out var remainingSequence))
+            {
+                throw new ArgumentException(
+                    "An authored truck sequence must contain at least an active and next truck.",
+                    nameof(truckSequence));
+            }
+
+            return new DeliveryState(activeTruck, nextTruck, remainingSequence, holdingQueue);
         }
 
         public DeliveryRoutingResult RouteEscapedPackage(MoveExecutionResult moveResult)
@@ -51,13 +95,21 @@ namespace ParcelEscape.Core
 
             if (ActiveTruck.TryLoad(package, out var loadedTruck))
             {
-                var state = new DeliveryState(loadedTruck, NextTruck, HoldingQueue);
+                var state = new DeliveryState(
+                    loadedTruck,
+                    NextTruck,
+                    RemainingTruckSequence,
+                    HoldingQueue);
                 return new DeliveryRoutingResult(DeliveryRoutingStatus.LoadedActiveTruck, package, state);
             }
 
             if (HoldingQueue.TryEnqueue(package, out var holdingQueue))
             {
-                var state = new DeliveryState(ActiveTruck, NextTruck, holdingQueue);
+                var state = new DeliveryState(
+                    ActiveTruck,
+                    NextTruck,
+                    RemainingTruckSequence,
+                    holdingQueue);
                 return new DeliveryRoutingResult(DeliveryRoutingStatus.AddedToHolding, package, state);
             }
 
@@ -66,13 +118,14 @@ namespace ParcelEscape.Core
 
         public TruckPromotionResult ResolveCompletedActiveTruck()
         {
+            var noCompletedTrucks = new List<TruckState>().AsReadOnly();
             var noAutoLoadedPackages = new List<PackageState>().AsReadOnly();
 
             if (!ActiveTruck.IsComplete)
             {
                 return new TruckPromotionResult(
                     TruckPromotionStatus.ActiveTruckIncomplete,
-                    null,
+                    noCompletedTrucks,
                     noAutoLoadedPackages,
                     this);
             }
@@ -81,55 +134,84 @@ namespace ParcelEscape.Core
             {
                 return new TruckPromotionResult(
                     TruckPromotionStatus.NextTruckUnavailable,
-                    null,
+                    noCompletedTrucks,
                     noAutoLoadedPackages,
                     this);
             }
 
-            var completedTruck = ActiveTruck;
-            var promotedTruck = NextTruck;
+            var completedTrucks = new List<TruckState>();
+            var activeTruck = ActiveTruck;
+            var nextTruck = NextTruck;
+            var remainingSequence = RemainingTruckSequence;
             var holdingQueue = HoldingQueue;
             var autoLoadedPackages = new List<PackageState>();
-            var maximumTransfers = Math.Min(
-                holdingQueue.Count,
-                promotedTruck.Capacity - promotedTruck.LoadCount);
+            var maximumPromotions = RemainingTruckSequence.Count + 1;
 
-            for (var transferIndex = 0; transferIndex < maximumTransfers; transferIndex++)
+            for (var promotionIndex = 0; promotionIndex < maximumPromotions; promotionIndex++)
             {
-                if (!holdingQueue.TryPeek(out var nextPackage) ||
-                    nextPackage.Color != promotedTruck.RequiredColor)
+                completedTrucks.Add(activeTruck);
+                activeTruck = nextTruck;
+
+                if (remainingSequence.TryDequeue(out var followingTruck, out var afterFollowing))
+                {
+                    nextTruck = followingTruck;
+                    remainingSequence = afterFollowing;
+                }
+                else
+                {
+                    nextTruck = null;
+                }
+
+                var maximumTransfers = Math.Min(
+                    holdingQueue.Count,
+                    activeTruck.Capacity - activeTruck.LoadCount);
+
+                for (var transferIndex = 0; transferIndex < maximumTransfers; transferIndex++)
+                {
+                    if (!holdingQueue.TryPeek(out var nextPackage) ||
+                        nextPackage.Color != activeTruck.RequiredColor)
+                    {
+                        break;
+                    }
+
+                    if (!holdingQueue.TryDequeue(out var dequeuedPackage, out var remainingHolding))
+                    {
+                        throw new InvalidOperationException("A peeked holding package could not be dequeued.");
+                    }
+
+                    if (dequeuedPackage.Id != nextPackage.Id)
+                    {
+                        throw new InvalidOperationException("Holding queue order changed during auto-load.");
+                    }
+
+                    if (!activeTruck.TryLoad(dequeuedPackage, out var loadedTruck))
+                    {
+                        throw new InvalidOperationException("An eligible holding package could not be loaded.");
+                    }
+
+                    activeTruck = loadedTruck;
+                    holdingQueue = remainingHolding;
+                    autoLoadedPackages.Add(dequeuedPackage);
+                }
+
+                if (!activeTruck.IsComplete || nextTruck == null)
                 {
                     break;
                 }
-
-                if (!holdingQueue.TryDequeue(out var dequeuedPackage, out var remainingHolding))
-                {
-                    throw new InvalidOperationException("A peeked holding package could not be dequeued.");
-                }
-
-                if (dequeuedPackage.Id != nextPackage.Id)
-                {
-                    throw new InvalidOperationException("Holding queue order changed during auto-load.");
-                }
-
-                if (!promotedTruck.TryLoad(dequeuedPackage, out var loadedTruck))
-                {
-                    throw new InvalidOperationException("An eligible holding package could not be loaded.");
-                }
-
-                promotedTruck = loadedTruck;
-                holdingQueue = remainingHolding;
-                autoLoadedPackages.Add(dequeuedPackage);
             }
 
-            var resultingState = new DeliveryState(promotedTruck, null, holdingQueue);
-            var status = promotedTruck.IsComplete
+            var resultingState = new DeliveryState(
+                activeTruck,
+                nextTruck,
+                remainingSequence,
+                holdingQueue);
+            var status = activeTruck.IsComplete
                 ? TruckPromotionStatus.PromotedTruckCompleted
                 : TruckPromotionStatus.Promoted;
 
             return new TruckPromotionResult(
                 status,
-                completedTruck,
+                completedTrucks,
                 autoLoadedPackages,
                 resultingState);
         }

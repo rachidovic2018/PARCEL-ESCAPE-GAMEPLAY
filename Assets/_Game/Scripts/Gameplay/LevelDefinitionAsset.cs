@@ -23,6 +23,13 @@ namespace ParcelEscape.Gameplay
         public int y;
     }
 
+    [Serializable]
+    public class TruckDefinition
+    {
+        public PackageColor requiredColor;
+        public int capacity = 1;
+    }
+
     [CreateAssetMenu(fileName = "NewLevelDefinition", menuName = "Parcel Escape/Level Definition")]
     public class LevelDefinitionAsset : ScriptableObject
     {
@@ -30,5 +37,6 @@ namespace ParcelEscape.Gameplay
         public int height = 5;
         public List<PackageDefinition> packageDefinitions = new List<PackageDefinition>();
         public List<BlockerDefinition> blockerDefinitions = new List<BlockerDefinition>();
+        public List<TruckDefinition> truckDefinitions = new List<TruckDefinition>();
     }
 }

@@ -6,7 +6,7 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Baseline
 - Branch: `main`
-- Current checkpoint: `403ce9c39155eca84fab85c69853d5d320f425f1` (`Add Phase 2 delivery domain foundation`)
+- Current checkpoint: `d0de4aa99060adef735d6640572ada7395bdbe16` (`Add deterministic truck promotion and holding auto-load`)
 - Unity: `6000.3.24f1`
 - Universal Render Pipeline: resolved `17.3.0`
 - Input System: `1.11.2`
@@ -32,10 +32,13 @@ Phase 2 — Full Puzzle Loop (started)
 - Phase 2 Core foundation models immutable active/next trucks, bounded FIFO holding, deterministic escaped-package routing, and active-truck completion.
 - Completed active trucks explicitly promote the existing next truck and expose the completed truck in the transition result.
 - Promotion auto-loads only the matching FIFO prefix from holding, stopping at the first mismatch or the promoted truck's capacity.
-- Once the authored next truck is promoted, the following next truck remains explicitly unavailable rather than being invented.
+- Authored level data now defines an ordered truck sequence with required package color and capacity; conversion produces pure Core truck state before simulation.
+- The first two authored trucks become active and next, while later entries remain ordered for deterministic promotion without fabricated successors.
+- Chained promotion and FIFO auto-load are bounded by the finite authored sequence and expose every departed completed truck.
+- `DevLevel_5x5` retains its board layout and now authors Blue, Red, Green, and Yellow capacity-one trucks in that order.
 
 # Tests
-- Edit Mode: 68 passed, 0 failed (including 19 deterministic delivery-domain tests).
+- Edit Mode: 82 passed, 0 failed (including 19 delivery-state tests and 14 authored truck-sequence/level-conversion tests).
 - Play Mode: 3 passed, 0 failed.
 - Play Mode covers scene rendering, URP-compatible materials, valid/blocked moves, duplicate protection, virtual mouse input, and virtual touch input.
 - Physical Android-device input has not been verified.
@@ -54,15 +57,14 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Known Issues
 - Android build and physical-device verification remain blocked until the matching Unity Android modules are installed.
-- No authored truck sequence beyond active/next exists yet, so promotion intentionally leaves the following next truck unavailable.
 
 # Deferred Systems
 - Truck and holding presentation
-- Authored deterministic truck sequences and delivery orchestration integration
+- Delivery orchestration integration
 - Victory/failure flow
 - Solver and level generator
 - Economy, ads, IAP, and analytics
 - Final visual art
 
 # Next Phase
-Continue Phase 2 — integrate delivery orchestration and introduce authored deterministic truck-sequence data.
+Continue Phase 2 — integrate escaped-package delivery routing and authored delivery state with `GameSession`.

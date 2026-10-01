@@ -39,3 +39,12 @@ MonoBehaviour:
   - id: 5
     x: 1
     y: 1
+  truckDefinitions:
+  - requiredColor: 1
+    capacity: 1
+  - requiredColor: 0
+    capacity: 1
+  - requiredColor: 2
+    capacity: 1
+  - requiredColor: 3
+    capacity: 1

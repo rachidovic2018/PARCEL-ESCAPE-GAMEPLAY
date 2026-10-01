@@ -435,10 +435,10 @@ namespace ParcelEscape.Tests
             Assert.AreEqual(expected.WasPromoted, actual.WasPromoted);
             Assert.AreEqual(expected.IsAwaitingNextTruck, actual.IsAwaitingNextTruck);
 
-            Assert.AreEqual(expected.CompletedTruck == null, actual.CompletedTruck == null);
-            if (expected.CompletedTruck != null)
+            Assert.AreEqual(expected.CompletedTrucks.Count, actual.CompletedTrucks.Count);
+            for (var index = 0; index < expected.CompletedTrucks.Count; index++)
             {
-                AssertTrucksEqual(expected.CompletedTruck, actual.CompletedTruck);
+                AssertTrucksEqual(expected.CompletedTrucks[index], actual.CompletedTrucks[index]);
             }
 
             AssertPackageListsEqual(expected.AutoLoadedPackages, actual.AutoLoadedPackages);
@@ -449,12 +449,27 @@ namespace ParcelEscape.Tests
                 AssertTrucksEqual(expected.ResultingState.NextTruck, actual.ResultingState.NextTruck);
             }
 
+            AssertTruckSequencesEqual(
+                expected.ResultingState.RemainingTruckSequence,
+                actual.ResultingState.RemainingTruckSequence);
+
             Assert.AreEqual(
                 expected.ResultingState.HoldingQueue.Capacity,
                 actual.ResultingState.HoldingQueue.Capacity);
             AssertPackageListsEqual(
                 expected.ResultingState.HoldingQueue.Packages,
                 actual.ResultingState.HoldingQueue.Packages);
+        }
+
+        private static void AssertTruckSequencesEqual(
+            TruckSequenceState expected,
+            TruckSequenceState actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (var index = 0; index < expected.Count; index++)
+            {
+                AssertTrucksEqual(expected.Trucks[index], actual.Trucks[index]);
+            }
         }
 
         private static void AssertPackageIds(

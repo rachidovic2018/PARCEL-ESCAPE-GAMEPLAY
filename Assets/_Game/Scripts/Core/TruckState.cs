@@ -16,6 +16,11 @@ namespace ParcelEscape.Core
             int capacity,
             IReadOnlyList<PackageState> loadedPackages = null)
         {
+            if (!Enum.IsDefined(typeof(PackageColor), requiredColor))
+            {
+                throw new ArgumentOutOfRangeException(nameof(requiredColor), "Truck color must be a defined package color.");
+            }
+
             if (capacity <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Truck capacity must be greater than zero.");
