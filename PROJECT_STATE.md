@@ -6,7 +6,7 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Baseline
 - Branch: `main`
-- Current checkpoint: `00db820a1b00620abaca9b01a3632ce5bb1fbdd3` (`Complete Phase 1 URP and Android configuration`)
+- Current checkpoint: `403ce9c39155eca84fab85c69853d5d320f425f1` (`Add Phase 2 delivery domain foundation`)
 - Unity: `6000.3.24f1`
 - Universal Render Pipeline: resolved `17.3.0`
 - Input System: `1.11.2`
@@ -30,10 +30,12 @@ Phase 2 — Full Puzzle Loop (started)
 - Touch-first Input System picking is active with an Editor mouse fallback.
 - Valid moves resolve once; blocked and duplicate requests do not corrupt logical state.
 - Phase 2 Core foundation models immutable active/next trucks, bounded FIFO holding, deterministic escaped-package routing, and active-truck completion.
-- Holding-to-truck auto-loading and truck promotion are not implemented yet.
+- Completed active trucks explicitly promote the existing next truck and expose the completed truck in the transition result.
+- Promotion auto-loads only the matching FIFO prefix from holding, stopping at the first mismatch or the promoted truck's capacity.
+- Once the authored next truck is promoted, the following next truck remains explicitly unavailable rather than being invented.
 
 # Tests
-- Edit Mode: 57 passed, 0 failed (including 8 deterministic delivery-routing tests).
+- Edit Mode: 68 passed, 0 failed (including 19 deterministic delivery-domain tests).
 - Play Mode: 3 passed, 0 failed.
 - Play Mode covers scene rendering, URP-compatible materials, valid/blocked moves, duplicate protection, virtual mouse input, and virtual touch input.
 - Physical Android-device input has not been verified.
@@ -52,14 +54,15 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Known Issues
 - Android build and physical-device verification remain blocked until the matching Unity Android modules are installed.
+- No authored truck sequence beyond active/next exists yet, so promotion intentionally leaves the following next truck unavailable.
 
 # Deferred Systems
 - Truck and holding presentation
-- Holding-to-truck auto-loading and truck promotion
+- Authored deterministic truck sequences and delivery orchestration integration
 - Victory/failure flow
 - Solver and level generator
 - Economy, ads, IAP, and analytics
 - Final visual art
 
 # Next Phase
-Continue Phase 2 — integrate delivery orchestration, then implement explicit truck promotion and holding auto-loading.
+Continue Phase 2 — integrate delivery orchestration and introduce authored deterministic truck-sequence data.

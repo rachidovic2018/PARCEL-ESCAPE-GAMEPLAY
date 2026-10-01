@@ -60,5 +60,31 @@ namespace ParcelEscape.Core
             resultingQueue = new HoldingQueueState(Capacity, packages);
             return true;
         }
+
+        public bool TryPeek(out PackageState package)
+        {
+            if (Count == 0)
+            {
+                package = default;
+                return false;
+            }
+
+            package = Packages[0];
+            return true;
+        }
+
+        public bool TryDequeue(out PackageState package, out HoldingQueueState resultingQueue)
+        {
+            if (!TryPeek(out package))
+            {
+                resultingQueue = this;
+                return false;
+            }
+
+            var packages = new List<PackageState>(Packages);
+            packages.RemoveAt(0);
+            resultingQueue = new HoldingQueueState(Capacity, packages);
+            return true;
+        }
     }
 }
