@@ -81,7 +81,7 @@ namespace ParcelEscape.Gameplay
 
             if (_packageViews.TryGetValue(packageId, out var view))
             {
-                if (result.Status == MoveExecutionStatus.Success && result.EscapedPackage.HasValue)
+                if (result.WasCommitted && result.EscapedPackage.HasValue)
                 {
                     StartCoroutine(ResolveEscapeRoutine(view, result.EscapedPackage.Value.Direction));
                 }
@@ -90,7 +90,7 @@ namespace ParcelEscape.Gameplay
                     StartCoroutine(ResolveBlockedRoutine(view));
                 }
             }
-            else if (result.Status == MoveExecutionStatus.Success)
+            else if (result.WasCommitted)
             {
                 _session.CompleteMovePresentation();
             }

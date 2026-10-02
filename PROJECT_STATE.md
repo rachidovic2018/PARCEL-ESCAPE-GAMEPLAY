@@ -6,7 +6,7 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Baseline
 - Branch: `main`
-- Current checkpoint: `d0de4aa99060adef735d6640572ada7395bdbe16` (`Add deterministic truck promotion and holding auto-load`)
+- Current checkpoint: `a88fb7e962376089c77642ca6f69883324f467c3` (`Add deterministic authored truck sequence`)
 - Unity: `6000.3.24f1`
 - Universal Render Pipeline: resolved `17.3.0`
 - Input System: `1.11.2`
@@ -18,7 +18,7 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Architecture
 - `ParcelEscape.Core` owns deterministic board state, validation, and execution without Unity presentation dependencies.
-- `GameSession` owns gameplay interaction eligibility and delegates legal moves to Core.
+- `GameSession` owns the current board and delivery states, delegates legal moves to Core, and commits accepted board-to-delivery transitions atomically.
 - Gameplay presentation performs input picking, forwards only `PackageId`, and animates resolved results.
 
 # Scenes
@@ -36,9 +36,11 @@ Phase 2 — Full Puzzle Loop (started)
 - The first two authored trucks become active and next, while later entries remain ordered for deterministic promotion without fabricated successors.
 - Chained promotion and FIFO auto-load are bounded by the finite authored sequence and expose every departed completed truck.
 - `DevLevel_5x5` retains its board layout and now authors Blue, Red, Green, and Yellow capacity-one trucks in that order.
+- Successful board escapes now route through `GameSession` into delivery, including deterministic promotion and FIFO holding auto-load before the combined result is committed.
+- Blocked, invalid, duplicate, and delivery-rejected moves leave both session states unchanged; restart restores the original board, authored truck sequence, and holding state.
 
 # Tests
-- Edit Mode: 82 passed, 0 failed (including 19 delivery-state tests and 14 authored truck-sequence/level-conversion tests).
+- Edit Mode: 88 passed, 0 failed (including 12 GameSession integration tests, 19 delivery-state tests, and 14 authored truck-sequence/level-conversion tests).
 - Play Mode: 3 passed, 0 failed.
 - Play Mode covers scene rendering, URP-compatible materials, valid/blocked moves, duplicate protection, virtual mouse input, and virtual touch input.
 - Physical Android-device input has not been verified.
@@ -60,11 +62,10 @@ Phase 2 — Full Puzzle Loop (started)
 
 # Deferred Systems
 - Truck and holding presentation
-- Delivery orchestration integration
 - Victory/failure flow
 - Solver and level generator
 - Economy, ads, IAP, and analytics
 - Final visual art
 
 # Next Phase
-Continue Phase 2 — integrate escaped-package delivery routing and authored delivery state with `GameSession`.
+Continue Phase 2 — add truck/holding presentation and define the deterministic victory/failure loop without moving authority out of Core.

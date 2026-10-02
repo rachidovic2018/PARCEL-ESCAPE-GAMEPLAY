@@ -9,6 +9,7 @@ namespace ParcelEscape.Gameplay
         [SerializeField] private BoardPresenter boardPresenter;
         [SerializeField] private CameraSetup cameraSetup;
         [SerializeField] private PackageInputController packageInputController;
+        [SerializeField, Min(1)] private int holdingCapacity = 4;
 
         private GameSession _gameSession;
 
@@ -55,7 +56,10 @@ namespace ParcelEscape.Gameplay
             packageInputController.Initialize(inputCamera);
 
             BoardState initialBoard = LevelDefinitionConverter.Convert(levelDefinition);
-            _gameSession = new GameSession(initialBoard);
+            DeliveryState initialDelivery = LevelDefinitionConverter.ConvertDelivery(
+                levelDefinition,
+                holdingCapacity);
+            _gameSession = new GameSession(initialBoard, initialDelivery);
 
             boardPresenter.Initialize(_gameSession);
             boardPresenter.SpawnBoard(initialBoard);
